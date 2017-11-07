@@ -9,6 +9,10 @@ contract Payroll{
     
     address owner;
     Employee[] employees;
+    // totalSalary is a global var here
+    // when adding/removing/update an employee, change the value of totalSalary
+    // instead of using a loop to compute totalSalary in calculateRunway() 
+    uint totalSalary = 0;
     
     uint constant payDuration  = 10 seconds;
     
@@ -17,7 +21,10 @@ contract Payroll{
         owner = msg.sender;
     }
     
+    // visibitliy: private
     function _partialPaid(Employee employee) private {
+        assert(employee.id != 0x0);
+        // thoughts: can we use a line like "if employee.id is in Employee" to check whether the employee is employed?
         uint payment = employee.salary * (now - employee.lastPayday) / payDuration;
         employee.id.transfer(payment);
     }
@@ -33,7 +40,7 @@ contract Payroll{
         // check duplicates
         var(employee, index) = _findEmployee(employeeId);
         assert(employee.id == 0x0);
-        
+        totalSalary += (salary * 1 ether);
         employees.push(Employee(employeeId, salary, now));
     }
     
@@ -47,6 +54,7 @@ contract Payroll{
         _partialPaid(employee);
         
         // delete
+        totalSalary -= employees[index].salary;
         delete employees[index];
         employees[index] = employees[employees.length - 1];
         employees.length -= 1;
@@ -60,8 +68,10 @@ contract Payroll{
         
         // pay
         _partialPaid(employee);
-        
-        employees[index].salary = salary * 1 ether;
+        uint currSalary = salary * 1 ether;
+        totalSalary -= employees[index].salary;
+        totalSalary += currSalary;
+        employees[index].salary = currSalary;
         employees[index].lastPayday = now;
     }
     
@@ -70,10 +80,6 @@ contract Payroll{
     }
     
     function calculateRunway() returns(uint){
-        uint totalSalary = 0;
-        for(uint i = 0; i < employees.length; i++){
-             totalSalary +=  employees[i].salary;
-        }
         return this.balance / totalSalary;   
     }
     
@@ -94,3 +100,23 @@ contract Payroll{
     }
     
 }
+
+/* Results:
+tx gas  ||  exec gas
+22987       1715
+23757       2485
+24527       3255
+25297       4025
+26067       4795
+26837       5565
+27607       6335
+28377       7105
+29147       7875
+29917       8645
+(+770 gas for each operation)
+
+after modification:
+22180       908
+22180       908
+..
+*/
