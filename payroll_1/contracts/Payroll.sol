@@ -17,6 +17,23 @@ contract Payroll is Ownable {
     address[] public EmployeeList;
 
     mapping(address => Employee) public employees;
+    /////////////////// events /////////////////////
+    event NewEmployee{
+        address employee
+    };
+    event UpdateEmployee{
+        address employee
+    };
+    event RemoveEmployee{
+        address employee
+    };
+    event NewFund{
+        uint balance
+    };
+    event GetPaid{
+        address employee
+    };
+
 
     /////////////////// modifiers /////////////////////
     modifier employeeExist(address employeeId) {
@@ -50,6 +67,7 @@ contract Payroll is Ownable {
         totalEmployee = totalEmployee.add(1);
         employees[employeeId] = Employee(employeeId, salary.mul(1 ether), currentTime());
         EmployeeList.push(employeeId);
+        NewEmployee(employeeId);
     }
     
     function removeEmployee(address employeeId) onlyOwner employeeExist(employeeId) {
@@ -67,6 +85,7 @@ contract Payroll is Ownable {
             }
         }       
         delete employees[employeeId];
+        RemoveEmployee(employeeId);
     }
     
     function updateEmployee(address employeeId, uint salary) onlyOwner employeeExist(employeeId) {
@@ -76,6 +95,7 @@ contract Payroll is Ownable {
         totalSalary = totalSalary.sub(employee.salary).add(salary.mul(1 ether));
         employees[employeeId].salary = salary.mul(1 ether);
         employees[employeeId].lastPayDay = currentTime();
+        UpdateEmployee(employeeId);
     }
     
     function changePaymentAddress(address newEmployeeId) employeeExist(msg.sender) employeeNotExist(newEmployeeId) {
@@ -84,7 +104,9 @@ contract Payroll is Ownable {
     }
 
     function addFund() payable returns (uint) {
+        NewFund(this.balance);
         return this.balance;
+
     }
     
     function calculateRunway() returns (uint) {
@@ -110,6 +132,7 @@ contract Payroll is Ownable {
         
         employee.lastPayDay = nextPayday;
         employee.id.transfer(employee.salary);
+        GetPaid(employee.id);
     }
 
     function changePaymentAddress(address newAddress) employeeExist(msg.sender) employeeNotExist(newAddress){
