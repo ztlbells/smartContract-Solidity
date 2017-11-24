@@ -8,5 +8,5 @@ module.exports = function(deployer) {
 
   deployer.link(Ownable, Payroll);
   deployer.link(SafeMath, Payroll);
-  deployer.deploy(Payroll);
+  deployer.deploy(Payroll);  
 };

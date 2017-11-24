@@ -1,26 +1,22 @@
-
 import React, { Component } from 'react'
 import PayrollContract from '../build/contracts/Payroll.json'
 import getWeb3 from './utils/getWeb3'
 
-import { Layout, Menu, Spin, Alert } from 'antd';
+import {Layout, Menu, Spin, Alert} from 'antd';
 
 import Employer from './components/Employer';
 import Employee from './components/Employee';
 
-import 'antd/dist/antd.css';
-import './App.css';
+import 'antd/dist/antd.css'
+import './App.css'
 
 const { Header, Content, Footer } = Layout;
-
 class App extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
-      storageValue: 0,
-      web3: null,
-      mode: 'employer'
+      web3: null
     }
   }
 
@@ -33,7 +29,6 @@ class App extends Component {
       this.setState({
         web3: results.web3
       })
-
       // Instantiate contract once web3 provided.
       this.instantiateContract()
     })
@@ -60,12 +55,13 @@ class App extends Component {
     // Get accounts.
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.setState({
-        account: accounts[0],
+        accounts,
+        account: accounts[0]
       });
       Payroll.deployed().then((instance) => {
         PayrollInstance = instance
         this.setState({
-          payroll: instance
+          payroll:instance
         });
       })
     })
@@ -73,7 +69,7 @@ class App extends Component {
 
   onSelectAccount = (ev) => {
     this.setState({
-      selectedAccount: ev.target.text
+      account: ev.target.text
     });
   }
 
@@ -86,46 +82,48 @@ class App extends Component {
   renderContent = () => {
     const { account, payroll, web3, mode } = this.state;
 
-
     if (!payroll) {
-      return <Spin tip="Loading..." />;
+      return <Spin tip="Loading..."/>;
     }
 
     switch(mode) {
       case 'employer':
-        return <Employer account={account} payroll={payroll} web3={web3} />
+        return <Employer account={account} payroll={payroll} web3={web3}/>;
       case 'employee':
-        return <Employee account={account} payroll={payroll} web3={web3} />
+        return <Employee account={account} payroll={payroll} web3={web3}/>;  
       default:
-        return <Alert message="请选一个模式" type="info" showIcon />
+        return <Alert message="Please choose a mode" type="info" showIcon />     
     }
   }
 
   render() {
-
+    const { account, accounts, payroll, web3} = this.state;
+    if (!accounts) {
+      return <div>Loading...</div>;
+    }
 
     return (
       <Layout>
         <Header className="header">
-          <div className="logo">老董区块链干货铺员工系统</div>
-          <Menu
-            theme="dark"
-            mode="horizontal"
-            defaultSelectedKeys={['employer']}
-            style={{ lineHeight: '64px' }}
-            onSelect={this.onSelectTab}
-          >
-            <Menu.Item key="employer">雇主</Menu.Item>
-            <Menu.Item key="employee">雇员</Menu.Item>
-          </Menu>
+        <div className="logo">MyPayrollApp</div>
+        <Menu
+          theme="dark"
+          mode="horizontal"
+          defaultSelectedKeys={['employer']}
+          style={{ lineHeight: '64px' }}
+          onSelect={this.onSelectTab}
+        >
+          <Menu.Item key="employer">Employer</Menu.Item>
+          <Menu.Item key="employee">Employee</Menu.Item>
+        </Menu>
         </Header>
         <Content style={{ padding: '0 50px' }}>
-          <Layout style={{ padding: '24px 0', background: '#fff', minHeight: '600px' }}>
-            {this.renderContent()}
+          <Layout style={{ padding: '24px 0', background: '#fff'}}>
+           {this.renderContent()}
           </Layout>
         </Content>
         <Footer style={{ textAlign: 'center' }}>
-          Payroll ©2017 老董区块链干货铺
+          Fanglu's Payroll App
         </Footer>
       </Layout>
     );
