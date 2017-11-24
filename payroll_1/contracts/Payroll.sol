@@ -16,7 +16,7 @@ contract Payroll is Ownable {
     uint totalSalary;
     mapping(address => Employee) public employees;
 
-    modifier employeeExit(address employeeId) {
+    modifier employeeExist(address employeeId) {
         var employee = employees[employeeId];
         assert(employee.id != 0x0);
         _;
@@ -38,7 +38,7 @@ contract Payroll is Ownable {
         totalEmployee = totalEmployee.add(1);
     }
 
-    function removeEmployee(address employeeId) onlyOwner employeeExit(employeeId) {
+    function removeEmployee(address employeeId) onlyOwner employeeExist(employeeId) {
         var employee = employees[employeeId];
 
         _partialPaid(employee);
@@ -47,9 +47,10 @@ contract Payroll is Ownable {
         totalEmployee = totalEmployee.sub(1);
     }
 
-    function updateEmployee(address employeeId, uint salary) onlyOwner employeeExit(employeeId) {
+    function updateEmployee(address employeeId, uint salary) onlyOwner employeeExist(employeeId) {
+        // find the Employee
         var employee = employees[employeeId];
-
+         // pay
         _partialPaid(employee);
         totalSalary = totalSalary.sub(employee.salary);
         employee.salary = salary.mul(1 ether);
@@ -69,7 +70,21 @@ contract Payroll is Ownable {
         return calculateRunway() > 0;
     }
 
-    function getPaid() employeeExit(msg.sender) {
+    // naming returns
+    function checkEmployee(address employeeId) employeeExist(employeeId) returns (uint salary, uint lastPayday) {
+        var employee = employees[employeeId];
+        salary = employee.salary;
+        lastPayday = employee.lastPayday;
+        // no explicit "return" here
+    }
+    
+    function changePaymentAddress(address newAddress) employeeExist(msg.sender) employeeNotExist(newAddress){
+        var employee = employees[msg.sender];
+        employees[newAddress] = Employee(newAddress, employee.salary, employee.lastPayday);
+        delete employees[msg.sender];
+    }
+
+    function getPaid() employeeExist(msg.sender) {
         var employee = employees[msg.sender];
 
         uint nextPayday = employee.lastPayday.add(payDuration);
